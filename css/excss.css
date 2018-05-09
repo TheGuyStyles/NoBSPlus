@@ -1,7 +1,6 @@
 .tiny-mets {
 	border-collapse: collapse;
 	width: 100%;
-	/*height: 75%;*/
 }
 
 .tiny-mets td {
@@ -14,7 +13,7 @@
     display: none;
     position: fixed;
     z-index: 1;
-    padding-top: 100px;
+    /*padding-top: 80px;*/
     left: 0;
     top: 0;
     width: 100%;
@@ -87,16 +86,21 @@ output[for=a-hi] {
 	font-weight: bold;
 }
 
-#exmenu-btn {
+.nobs-menu-btns {
 	background-color: #008CBA;
     border: none;
     color: white;
-    padding: 6px 14px;
+    padding: 3px 10px;
 	margin-right: 11px;
+	float: right;
     text-align: center;
     text-decoration: none;
     display: inline-block;
     font-size: 14px;
+}
+
+.nobs-menu-btns:active {
+	background-color: #009fdd;
 }
 
 #rgb-cont {

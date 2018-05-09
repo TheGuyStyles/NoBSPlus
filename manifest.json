@@ -1,12 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "nobsplus",
-	"version": "1.0",
-
-	//"browser_action": {
-	//	"default_icon": "icons/NBSc_96.png",
-	//	"default_title": "NoBSPlus"
-	//},
+	"version": "1.2",
 
 	"description": "Convenience for the NoBS Crypto Spreadsheet",
 
@@ -17,8 +12,8 @@
 	
 	"content_scripts": [
 		{
-			"matches": ["https://docs.google.com/spreadsheets/*"],
-			"js": ["js/exmain.js"],
+			"matches": ["https://docs.google.com/spreadsheets/u/2/d/e/2PACX-1vTaQSEXx7nayY6FJ8O4icWjTKhQGG4Oup8L7lDy7Pb5oLa2Y-Bv-c_MyFa7kVomltx_aOBw-caJoq47/pubhtml"],
+			"js": ["js/aes.js", "js/exmain.js"],
 			"css": ["css/excss.css"]
 		}
   	]
