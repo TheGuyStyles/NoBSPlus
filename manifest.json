@@ -1,10 +1,10 @@
 {
 	"manifest_version": 2,
 	"name": "nobsplus",
-	"version": "1.2",
-
+	"version": "2.0",
+	
 	"description": "Convenience for the NoBS Crypto Spreadsheet",
-
+	
 	"icons": {
 		"48": "icons/NBSc_icon.png",
 		"96": "icons/NBSc_96.png"
@@ -16,5 +16,9 @@
 			"js": ["js/aes.js", "js/exmain.js"],
 			"css": ["css/excss.css"]
 		}
-  	]
+	],
+	
+	"permissions": [
+		"https://min-api.cryptocompare.com/data/*"
+	]
 }

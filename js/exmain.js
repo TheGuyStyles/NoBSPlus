@@ -13,17 +13,80 @@ function reloadMetrics() {
 	} catch (err) {console.log(err);}
 }
 
+function searchMetricPk() {
+	for (var i = 0; i < tableHooks.length; ++i) {
+		var rowRef,
+			nameRef,
+			metricPicks = [],
+			noPicks = false;
+		for (var j = 0; j < tableHooks[i].rows.length; ++j) {
+			rowRef = tableHooks[i].rows[j];
+			nameRef = rowRef.childNodes[1].innerHTML;
+			metricPicks = [];
+			noPicks = false;
+			for (var k = 0; k < currentMetrics.length; ++k) {
+				try {
+					if (currentMetrics[k].cells[1].innerHTML === nameRef && (currentMetrics[k].cells[10].innerHTML === 'Yes' || currentMetrics[k].cells[10].innerHTML === 'No')) {
+						for (var l = 5; l < currentMetrics[k].cells.length - 3; ++l) {
+							if (currentMetrics[k].cells[l].innerHTML === 'Yes') {
+								metricPicks.push(l - 4);
+							}
+						}
+						noPicks = metricPicks.length > 0 ? false : true;
+						break;
+					}
+				} catch (err) {
+					console.log(err);
+				}
+			}
+			if ((noPicks == true) || (metricPicks.length > 0 && metricPicks.indexOf(Number(document.getElementById('met-kul').value)) == -1)) {
+				rowRef.style.display = 'none';
+				rowRef.classList.add('select-met-hidden');
+			}
+		}
+	}
+}
+
+function clearMetricPk() {
+	var hiddenRefs = document.getElementsByClassName('select-met-hidden');
+	for (var i = 0; i < hiddenRefs.length; ++i) {
+		hiddenRefs[i].style.display = '';
+	}
+}
+
 function initMenuModal() {
 	var dTitleRef = document.getElementById('doc-title'),
-		menuBtnRef = document.createElement('input');
+		menuBtnRef = document.createElement('input'),
+		srchMetBtn = document.createElement('input'),
+		srchMetInput = document.createElement('input'),
+		clearMetBtn = document.createElement('input');
 
 	menuBtnRef.setAttribute('type', 'button');
-	menuBtnRef.value = 'Highlighter Menu';
+	menuBtnRef.value = 'NoBSPlus Menu';
 	menuBtnRef.id = 'exmenu-btn';
 	menuBtnRef.classList.add('nobs-menu-btns');
 	dTitleRef.appendChild(menuBtnRef);
 	
-	document.body.insertAdjacentHTML('beforeend', '<!-- The Modal --><div id="myModal" class="modal">  <!-- Modal content -->  <div class="modal-content">  <span class="modal-close"id="modal-cls">&times;</span>  <br>  <div id="modal-menu"><h2>RGBA Color Slider for the Row Highlighter:</h2><h4>Whatever color you chose is automatically saved *only* if the "X" is clicked to close this menu.</h4> <div><div id="rgb-cont"><fieldset><label for="r-hi">R</label><input type="range"min="0"max="255"id="r-hi"step="1"value="0"><output for="r-hi"id="r-hi_out">0</output></fieldset><fieldset><label for="g-hi">G</label><input type="range"min="0"max="255"id="g-hi"step="1"value="132"><output for="g-hi"id="g-hi_out">0</output></fieldset><fieldset><label for="b-hi">B</label><input type="range"min="0"max="255"id="b-hi"step="1"value="255"><output for="b-hi"id="b-hi_out">0</output></fieldset><fieldset><label for="a-hi">A</label><input type="range"min="0"max="1"id="a-hi"step=".01"value="0.3"><output for="a-hi"id="a-hi_out">1</output></fieldset></div> <div id="color-pre-box"></div></div> <h2>Extension Use Instructions:</h2><p>To use, simply hover over each row to highlight it in the color you have chosen. To keep a row highlighted, click on any cell within the row except for the first one which contains the name of the coin. Clicking on the coin name will open a small area beneath its row to display each individual metric number that selected that coin. The highlighter works with each detail tab, but a few rows in one or two detail tabs do not for now. To save your highlight color in local storage, which persists even if you close the browser, click the "X" at the top right of the menu modal to close it. Otherwise, you can also close the menu by clicking outside of it.</p><h2>Metric Tab Selector:</h2><p>Select from which detail tab you want metrics to display under the coin name after clicking on it. First tab is "0", then goes by two\'s, 0, 2, 4, etc. Previously opened coin names will not reset for now:</p><br><input value="0" id="met-select" /><input id="met-reset" type="button" value="Set" /><h2>Portfolio Instructions:</h2><p>When you open an info row by clicking on a coin name, you can now keep track of coins by adding how many coins you bought or sold and at what prices. The average price for the total amount of coins in each catagory is then calculated and displayed.</p><p>Each time you press the save button, your current portfilio data will be encrypted and saved only on your machine. The encryption will be done with whatever password is typed in at the top, so you can change it every time you save.</p><p>To load it, use the same password that was in the "password" bar at the time of clicking the save button. This is because no passwords are stored anywhere, on your machine or another. The "Load Portfolio" button does *not* encrypt or save anything, it only checks for a locally stored portfolio and decrypts it with the entered password, then loads it. The save button encrypts and saves everything added into the portfolio up to that point with the password currently in the pass input. An empty portfolio object is initialized upon page open, and clicking save will always prompt you to confirm. Still lightweight and experimental but Crypto Compare support coming.</p><h5>This is still a work in progress, so simple bugs may come up. It is also not future proof in the case that the table conventions for the metrics change.</h5><h5>This started as a simple personal convenience project because I was growing fond of the spreadsheet. If I can confirm that the sheet will continue to be displayed in ways that my extension can reliably hook into it, then I will continue to improve it and add things I find useful. Hope you enjoy!</h5></div>  </div></div>');
+	clearMetBtn.setAttribute('type', 'button');
+	clearMetBtn.value = 'Clear';
+	clearMetBtn.id = 'met-clear';
+	clearMetBtn.classList.add('nobs-menu-btns');
+	clearMetBtn.onclick = function() {clearMetricPk();}
+	dTitleRef.appendChild(clearMetBtn);
+	
+	srchMetInput.placeholder = 'Metric #';
+	srchMetInput.id = 'met-kul';
+	srchMetInput.classList.add('nobs-menu-btns');
+	dTitleRef.appendChild(srchMetInput);
+	
+	srchMetBtn.setAttribute('type', 'button');
+	srchMetBtn.value = 'Search';
+	srchMetBtn.id = 'met-kulset';
+	srchMetBtn.classList.add('nobs-menu-btns');
+	srchMetBtn.onclick = function() {searchMetricPk();}
+	dTitleRef.appendChild(srchMetBtn);
+	
+	document.body.insertAdjacentHTML('beforeend', '<!-- The Modal --><div id="myModal" class="modal">  <!-- Modal content -->  <div class="modal-content">  <span class="modal-close"id="modal-cls">&times;</span><div id="modal-menu"><center><h1>NoBSPlus</h1></center><h2>RGBA Color Slider for the Row Highlighter:</h2><h4>Whatever color you chose is automatically saved *only* if the "X" is clicked to close this menu.</h4> <div><div class="in-bl-divs"><fieldset><label for="r-hi">R</label><input type="range"min="0"max="255"id="r-hi"step="1"value="0"><output for="r-hi"id="r-hi_out">0</output></fieldset><fieldset><label for="g-hi">G</label><input type="range"min="0"max="255"id="g-hi"step="1"value="132"><output for="g-hi"id="g-hi_out">0</output></fieldset><fieldset><label for="b-hi">B</label><input type="range"min="0"max="255"id="b-hi"step="1"value="255"><output for="b-hi"id="b-hi_out">0</output></fieldset><fieldset><label for="a-hi">A</label><input type="range"min="0"max="1"id="a-hi"step=".01"value="0.3"><output for="a-hi"id="a-hi_out">1</output></fieldset></div> <div id="color-pre-box"></div></div> <h2>Basic Use:</h2><p>To use, simply hover over each row to highlight it in the color you have chosen. To keep a row highlighted, click on any cell within the row except for the first one which contains the name of the coin. Clicking on the coin name will open a small area beneath its row to display each individual metric number that selected that coin, as well as the current market price of the coin and any portfolio information if you\'ve entered any. The highlighter works with each detail tab. To save your highlighter color in local storage, which persists even if you close the browser, click the "X" at the top right of the menu modal to close it. Otherwise, you can also close the menu by clicking outside of it.</p><p>There is also a Metric search functionality now, which is in the top right corner. To use it, type in a metric number such as 1 or 20 and click the search button. The search can compound for several metrics. To return back to the full spreadsheet, just click the clear button</p><h2>Metric Tab Selector:</h2><p>Select from which detail tab you want metrics to display under the coin name after clicking on it. First tab is "0", then goes by two\'s, 0, 2, 4, etc.:</p><br><input value="0" id="met-select" /><input id="met-reset" type="button" value="Set" /><h2>Portfolio:</h2><p>When you open an info row by clicking on a coin name, you can now keep track of coins by adding how many coins you bought or sold and at what prices. The average price for the total amount of coins in each catagory is then calculated and displayed. I have also added CryptoCompare to try and get the market price of the coin, and calculate your full adjusted percent return.</p><p>Each time you press the save button, your current portfilio data will be encrypted and saved only on your machine. The encryption will be done with whatever password is typed in at the top, so you can change it every time you save.</p><p>To load it, use the same password that was in the "password" bar at the time of clicking the save button. This is because no passwords are stored anywhere, on your machine or another. The "Load Portfolio" button does not encrypt or save anything, it only checks for a locally stored portfolio and decrypts it with the entered password, then loads it. The save button encrypts and saves everything added into the portfolio up to that point with the password currently in the password input. An empty portfolio object is initialized upon page open, and clicking save will always prompt you to confirm. Still lightweight and experimental so CryptoCompare may fail, and calculations are still in trial.</p><p><a href="https://github.com/TheGuyStyles/NoBSPlus" target="_blank">Github link</a></p><h5>This is still a work in progress, so simple bugs may come up. It is also not future proof in the case that the table conventions for the metrics change.</h5><h5>This started as a simple personal convenience project by Guy Styles, but is now mostly maintained by me, Loshcat. If I can confirm that the sheet will continue to be displayed in ways that the extension can reliably hook into it, then I will continue to improve it and add things I find useful. Hope you enjoy!</h5></div>  </div></div>');
 	
 	document.getElementById('met-reset').onclick = function() {reloadMetrics();}
 
@@ -55,25 +118,25 @@ function initPortBtns() {
 		passInputRef = document.createElement('input'),
 		passBtnRef = document.createElement('input'),
 		saveBtnRef = document.createElement('input');
+	
+	saveBtnRef.setAttribute('type', 'button');
+	saveBtnRef.value = 'Save Portfolio';
+	saveBtnRef.id = 'port-save-btn';
+	saveBtnRef.classList.add('nobs-menu-btns');
+	footerRef.appendChild(saveBtnRef);
 
 	passBtnRef.setAttribute('type', 'button');
 	passBtnRef.value = 'Load Portfolio';
 	passBtnRef.id = 'port-btn';
 	passBtnRef.classList.add('nobs-menu-btns');
-	dTitleRef.appendChild(passBtnRef);
+	footerRef.appendChild(passBtnRef);
 
 	passInputRef.setAttribute('type', 'password');
 	passInputRef.placeholder = 'Portfolio Password';
 	passInputRef.id = 'port-pass';
 	passInputRef.style.float = 'right';
 	passInputRef.style.marginRight = '11px';
-	dTitleRef.appendChild(passInputRef);
-
-	saveBtnRef.setAttribute('type', 'button');
-	saveBtnRef.value = 'Save Portfolio';
-	saveBtnRef.id = 'port-save-btn';
-	saveBtnRef.classList.add('nobs-menu-btns');
-	footerRef.appendChild(saveBtnRef);
+	footerRef.appendChild(passInputRef);
 
 	passBtnRef.onclick = function () {
 		if (document.getElementById('port-pass').value !== '') {
@@ -137,12 +200,15 @@ if (localStorage.getItem('nobs_hi_color') !== null) {
 	b_hi_out.value = storedColor[2];
 	a_hi_out.value = storedColor[3];
 }
+
+var colorToAdd = [Number(r_hi.value), Number(g_hi.value), Number(b_hi.value), Number(a_hi.value)];
 // --
 
 function setHiColor(outHi, inHi) {
-	var colorToAdd = [Number(r_hi.value), Number(g_hi.value), Number(b_hi.value), Number(a_hi.value)];
+	//var colorToAdd = [Number(r_hi.value), Number(g_hi.value), Number(b_hi.value), Number(a_hi.value)];
 	var formatedColor = "rgba("+colorToAdd.join(', ')+")";
 	outHi.value = inHi.value;
+	colorToAdd = [Number(r_hi.value), Number(g_hi.value), Number(b_hi.value), Number(a_hi.value)];
 	document.getElementById('color-pre-box').style.backgroundColor = formatedColor;
 }
 setHiColor(r_hi_out, r_hi);
@@ -166,7 +232,7 @@ function nobsSetup(tblHook) {
 
 		for (var j = 0; j < eachChildElem.length; ++j) {
 
-			eachChildElem[j].onmouseenter = function (event) {
+			eachChildElem[j].onmouseenter = function() {
 				if (this.style.backgroundColor === '' && !this.classList.contains('just-selected')) {
 					var rowCells = this.parentElement.childNodes;
 
@@ -176,7 +242,7 @@ function nobsSetup(tblHook) {
 				}
 			};
 
-			eachChildElem[j].onmouseleave = function (event) {
+			eachChildElem[j].onmouseleave = function() {
 				if (this.style.backgroundColor !== '' && !this.classList.contains('just-selected')) {
 					var rowCells = this.parentElement.childNodes;
 
@@ -187,13 +253,15 @@ function nobsSetup(tblHook) {
 			};
 
 			if (eachChildElem[j].classList.contains('first-td')) {
-				eachChildElem[j].onclick = function (event) {
+				eachChildElem[j].onclick = function() {
 					var infoRow = this.parentNode.parentNode.childNodes[this.parentNode.rowIndex] || {},
 						thisCoin = this.innerHTML;
+					
 					if (infoRow.classList && infoRow.classList.contains('own-info')) {
-						infoRow.style.display = infoRow.style.display === 'none' ? '' : 'none';
+						//infoRow.style.display = infoRow.style.display === 'none' ? '' : 'none';
+						//readPort(infoRow.cells[5], thisCoin);
+						infoRow.remove();
 						
-						readPort(infoRow.cells[5], thisCoin);
 					} else {
 						this.parentNode.childNodes[4].style.backgroundColor = '';
 						var metricPicks = [],
@@ -214,7 +282,7 @@ function nobsSetup(tblHook) {
 						newCell1.style.textAlign = 'center';
 						newCell1.style.verticalAlign = 'top';
 						newCell1.style.fontWeight = 'bold';
-						newCell1.innerHTML = '<div><label>Number of Coins Purchased:</label><br><input></input><br><label>Price per coin (BTC):</label><br><input></input><hr><input type="button" value="-" style="font-weight: bold; width: 50%;" placeholder="' + thisCoin + '"/><input type="button" value="+" style="font-weight: bold; width: 50%;" placeholder="' + thisCoin + '"/></div>';
+						newCell1.innerHTML = '<div><label>Number of Coins Bought/Sold:</label><br><input></input><br><label>Price per coin (BTC):</label><br><input></input><hr><input type="button" value="-" style="font-weight: bold; width: 50%;" placeholder="' + thisCoin + '"/><input type="button" value="+" style="font-weight: bold; width: 50%;" placeholder="' + thisCoin + '"/></div>';
 						newCell1.getElementsByTagName('input')[3].onclick = function () {
 							writePort(this, 'ownedCoins', 'avgPrice');
 						};
@@ -278,13 +346,14 @@ function nobsSetup(tblHook) {
 						newCell5.style.backgroundColor = '#fff2cc';
 						newCell5.style.verticalAlign = 'top';
 						newCell5.style.fontWeight = 'bold';
-						newCell5.innerHTML = '<div><label>Coins Purchased:</label><br><input disabled /><br><label>Average Price Paid:</label><br><input disabled /><hr><label>Coins Sold:</label><br><input disabled /><br><label>Average Price Sold:</label><br><input disabled /></div>';
+						newCell5.innerHTML = '<div class="in-bl-divs"><label>Coins Purchased:</label><br><input class="port-displays" disabled /><br><label>Average Price Paid:</label><br><input class="port-displays" disabled /><br><label>Current Price:</label><br><input class="port-displays" disabled /></div><div class="in-bl-divs"><label>Coins Sold:</label><br><input class="port-displays" disabled /><br><label>Average Price Sold:</label><br><input class="port-displays" disabled /><br><label>BTC Locked-in:</label><br><input class="port-displays" disabled /></div><div class="in-bl-divs"><label>Coins Held:</label><br><input class="port-displays" disabled /><br><label>Total BTC Spent:</label><br><input class="port-displays" disabled /><br><label>Adjusted Value:</label><br><input class="port-displays" disabled /></div><div class="in-bl-divs"><label>Percent Return:</label><br><input class="port-displays" disabled /></div>';
 						
-						readPort(newRow.cells[5], thisCoin);
+						//readPort(newRow.cells[5], thisCoin);
+						getCryptoCompare(newRow.cells[5], thisCoin);
 					}
 				};
 			} else {
-				eachChildElem[j].onclick = function (event) {
+				eachChildElem[j].onclick = function() {
 					if (!this.classList.contains('just-selected')) {
 						var rowCells = this.parentElement.childNodes;
 
@@ -307,8 +376,8 @@ function nobsSetup(tblHook) {
 	}
 //} catch(err) {console.log(err);}
 }
-for (let i = 0; i < tableHooks.length - 2; ++i) {
-	nobsSetup(tableHooks[i], i);
+for (let i = 0; i < tableHooks.length; ++i) {
+	nobsSetup(tableHooks[i]);
 }
 
 function writePort(thisOfBtn, coinNum, coinPrice) {
@@ -340,27 +409,55 @@ function writePort(thisOfBtn, coinNum, coinPrice) {
 		thisOfBtn.parentNode.getElementsByTagName('input')[0].value = '';
 		thisOfBtn.parentNode.getElementsByTagName('input')[1].value = '';
 		
-		readPort(thisOfBtn.parentNode.parentNode.parentNode.cells[5], coinName);
+		//readPort(thisOfBtn.parentNode.parentNode.parentNode.cells[5], coinName);
+		getCryptoCompare(thisOfBtn.parentNode.parentNode.parentNode.cells[5], coinName);
 	} else {
 		alert('Numbers Pls');
 	}
 }
 
-function readPort(cellRef, coinName) {
-	var docRefs = [cellRef.getElementsByTagName('input')[0], cellRef.getElementsByTagName('input')[1], cellRef.getElementsByTagName('input')[2], cellRef.getElementsByTagName('input')[3]];
+function getCryptoCompare(cellRef, coinName, newName) {
+	var regExp = /\(([^)]+)\)/,
+		matches = regExp.exec(coinName), //matches[1] contains the value between the parentheses
+		realName = newName || matches[1],
+		myURL = 'https://min-api.cryptocompare.com/data/price?fsym=' + realName + '&tsyms=BTC';
+	
+	var req = new XMLHttpRequest();
+	req.open('GET', myURL, true);
+	req.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200 && realName.indexOf('*') == -1) {
+			var coinData = JSON.parse(this.response);
+			if (coinData.Response == 'Error') {
+				getCryptoCompare(cellRef, coinName, matches[1] + '*');
+			} else {
+				readPort(cellRef, coinName, coinData.BTC);
+			}
+		}
+	}
+	req.send();
+}
+
+function readPort(cellRef, coinName, cryptoComp) {
+	var docRefs = [cellRef.getElementsByTagName('input')[0], cellRef.getElementsByTagName('input')[1], cellRef.getElementsByTagName('input')[2], cellRef.getElementsByTagName('input')[3], cellRef.getElementsByTagName('input')[4], cellRef.getElementsByTagName('input')[5], cellRef.getElementsByTagName('input')[6], cellRef.getElementsByTagName('input')[7], cellRef.getElementsByTagName('input')[8], cellRef.getElementsByTagName('input')[9]];
 	for (var doc of docRefs) {
 			doc.value = 0;
 		}
 	if (nobsPortObj.hasOwnProperty(coinName)) {
 		if (nobsPortObj[coinName].hasOwnProperty('ownedCoins') && nobsPortObj[coinName].hasOwnProperty('avgPrice')) {
 			docRefs[0].value = nobsPortObj[coinName]['ownedCoins'];
-			docRefs[1].value = nobsPortObj[coinName]['avgPrice'];
+			docRefs[1].value = nobsPortObj[coinName]['avgPrice'].toFixed(8);
 		}
 		if (nobsPortObj[coinName].hasOwnProperty('soldCoins') && nobsPortObj[coinName].hasOwnProperty('sldPrice')) {
-			docRefs[2].value = nobsPortObj[coinName]['soldCoins'];
-			docRefs[3].value = nobsPortObj[coinName]['sldPrice'];
+			docRefs[3].value = nobsPortObj[coinName]['soldCoins'];
+			docRefs[4].value = nobsPortObj[coinName]['sldPrice'].toFixed(8);
 		}
 	}
+	docRefs[2].value = cryptoComp.toFixed(8);
+	docRefs[5].value = (Number(docRefs[3].value) * Number(docRefs[4].value)).toFixed(8);
+	docRefs[6].value = Number((Number(docRefs[0].value) - Number(docRefs[3].value)).toFixed(8));
+	docRefs[7].value = (Number(docRefs[0].value) * Number(docRefs[1].value)).toFixed(8);
+	docRefs[8].value = (Number(docRefs[6].value) * cryptoComp + Number(docRefs[5].value)).toFixed(8);
+	docRefs[9].value = String(Number((((Number(docRefs[8].value) / Number(docRefs[7].value)) * 100) - 100).toFixed(2))) + '%';
 }
 
 function getRGBValues(rgbStr) {
@@ -375,8 +472,9 @@ function getRGBValues(rgbStr) {
 }
 
 function addColors(base, alphaPlus) {
-	var added = [Number(r_hi.value), Number(g_hi.value), Number(b_hi.value), Number(a_hi.value) + alphaPlus],
+	var added = colorToAdd.slice(),
 		mix = [];
+	added[3] += alphaPlus;
 	
 	mix[3] = 1 - (1 - added[3]) * (1 - base[3]); // alpha
 	mix[0] = Math.round((added[0] * added[3] / mix[3]) + (base[0] * base[3] * (1 - added[3]) / mix[3])); // red

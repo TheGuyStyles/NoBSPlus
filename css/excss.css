@@ -103,7 +103,7 @@ output[for=a-hi] {
 	background-color: #009fdd;
 }
 
-#rgb-cont {
+.in-bl-divs {
 	display: inline-block;
 }
 
@@ -111,4 +111,10 @@ output[for=a-hi] {
 	display: inline-block;
 	height: 125px;
 	width: 125px;
+}
+
+.port-displays {
+	border-style: solid;
+	border-radius: 3px;
+	margin-right: 3px;
 }
