@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "nobsplus",
-	"version": "2.0",
+	"version": "2.1",
 	
 	"description": "Convenience for the NoBS Crypto Spreadsheet",
 	

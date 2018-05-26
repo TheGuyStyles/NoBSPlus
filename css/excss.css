@@ -103,6 +103,10 @@ output[for=a-hi] {
 	background-color: #009fdd;
 }
 
+.nobs-menu-btns:disabled {
+	background-color: gray;
+}
+
 .in-bl-divs {
 	display: inline-block;
 }

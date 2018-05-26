@@ -7,6 +7,88 @@ try {
 } catch (err) {console.log(err);}
 // --
 
+// Globals
+var ccObjArr = [];
+var cMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+	unixTS;
+for (let i = 0; i < cMonths.length; ++i) {
+	if (tableHooks[0].rows[1].cells[2].innerText.includes(cMonths[i])) {
+		unixTS = (new Date(2018, i, (tableHooks[0].rows[1].cells[2].innerText.match(/[^0-9]([0-9]+)/))[1]).getTime() / 1000).toFixed(0);
+		break;
+	}
+}
+// --
+function allThePrices(coinNum, newName) {
+	try {
+		var regExp = /\(([^)]+)\)/,
+			coinName = tableHooks[0].rows[coinNum].cells[1].innerText,
+			matches = regExp.exec(coinName),
+			realName = newName || matches[1],
+			myURL = 'https://min-api.cryptocompare.com/data/price?fsym=' + realName + '&tsyms=BTC';
+		
+		var req = new XMLHttpRequest();
+		req.open('GET', myURL, true);
+		req.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var coinData = JSON.parse(this.response);
+				if (coinData.Response == 'Error') {
+					if (realName.indexOf('**') == -1) {
+						allThePrices(coinNum, realName + '*');
+					} else {
+						handleCCB(coinNum);
+					}
+				} else {
+					ccObjArr.push({"name": realName, "price": coinData.BTC, "cell": tableHooks[0].rows[coinNum].cells[2]});
+					handleCCB(coinNum);
+				}
+			}
+		}
+		req.send();
+	} catch (err) {
+		handleCCB(coinNum);
+		console.log(err);
+	}
+}
+
+function allTheHistory(index) {
+	if (index < ccObjArr.length) {
+		try {
+			var myURL = 'https://min-api.cryptocompare.com/data/pricehistorical?fsym=' + ccObjArr[index].name + '&tsyms=BTC&ts=' + unixTS;
+			var req = new XMLHttpRequest();
+
+			req.open('GET', myURL, true);
+			req.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					var priceRef = 0,
+						returnPercent = 0,
+						coinData = JSON.parse(this.response);
+					if (coinData.Response != 'Error') {
+						priceRef = coinData[ccObjArr[index].name].BTC;
+					}
+					returnPercent = (Number(((ccObjArr[index].price / priceRef) * 100) - 100)).toFixed(2);
+					ccObjArr[index].cell.innerText += '\n' + returnPercent + '%';
+					setTimeout(function () {
+						allTheHistory(index + 1);
+					}, 70);
+				}
+			}
+			req.send();
+		} catch (err) {
+			console.log(err);
+		}
+	}
+}
+
+function handleCCB(coinNum) {
+	if (coinNum < tableHooks[0].rows.length - 2) {
+		setTimeout(function () {
+			allThePrices(coinNum + 1);
+		}, 70);
+	} else {
+		allTheHistory(0);
+	}
+};
+
 function reloadMetrics() {
 	try {
 		currentMetrics = document.getElementById(document.getElementById('sheet-menu').childNodes[Number(document.getElementById('met-select').value)].id.split('-')[2]).getElementsByTagName('tr');
@@ -59,7 +141,8 @@ function initMenuModal() {
 		menuBtnRef = document.createElement('input'),
 		srchMetBtn = document.createElement('input'),
 		srchMetInput = document.createElement('input'),
-		clearMetBtn = document.createElement('input');
+		clearMetBtn = document.createElement('input'),
+		ccButton = document.createElement('input');
 
 	menuBtnRef.setAttribute('type', 'button');
 	menuBtnRef.value = 'NoBSPlus Menu';
@@ -86,7 +169,16 @@ function initMenuModal() {
 	srchMetBtn.onclick = function() {searchMetricPk();}
 	dTitleRef.appendChild(srchMetBtn);
 	
-	document.body.insertAdjacentHTML('beforeend', '<!-- The Modal --><div id="myModal" class="modal">  <!-- Modal content -->  <div class="modal-content">  <span class="modal-close"id="modal-cls">&times;</span><div id="modal-menu"><center><h1>NoBSPlus</h1></center><h2>RGBA Color Slider for the Row Highlighter:</h2><h4>Whatever color you chose is automatically saved *only* if the "X" is clicked to close this menu.</h4> <div><div class="in-bl-divs"><fieldset><label for="r-hi">R</label><input type="range"min="0"max="255"id="r-hi"step="1"value="0"><output for="r-hi"id="r-hi_out">0</output></fieldset><fieldset><label for="g-hi">G</label><input type="range"min="0"max="255"id="g-hi"step="1"value="132"><output for="g-hi"id="g-hi_out">0</output></fieldset><fieldset><label for="b-hi">B</label><input type="range"min="0"max="255"id="b-hi"step="1"value="255"><output for="b-hi"id="b-hi_out">0</output></fieldset><fieldset><label for="a-hi">A</label><input type="range"min="0"max="1"id="a-hi"step=".01"value="0.3"><output for="a-hi"id="a-hi_out">1</output></fieldset></div> <div id="color-pre-box"></div></div> <h2>Basic Use:</h2><p>To use, simply hover over each row to highlight it in the color you have chosen. To keep a row highlighted, click on any cell within the row except for the first one which contains the name of the coin. Clicking on the coin name will open a small area beneath its row to display each individual metric number that selected that coin, as well as the current market price of the coin and any portfolio information if you\'ve entered any. The highlighter works with each detail tab. To save your highlighter color in local storage, which persists even if you close the browser, click the "X" at the top right of the menu modal to close it. Otherwise, you can also close the menu by clicking outside of it.</p><p>There is also a Metric search functionality now, which is in the top right corner. To use it, type in a metric number such as 1 or 20 and click the search button. The search can compound for several metrics. To return back to the full spreadsheet, just click the clear button</p><h2>Metric Tab Selector:</h2><p>Select from which detail tab you want metrics to display under the coin name after clicking on it. First tab is "0", then goes by two\'s, 0, 2, 4, etc.:</p><br><input value="0" id="met-select" /><input id="met-reset" type="button" value="Set" /><h2>Portfolio:</h2><p>When you open an info row by clicking on a coin name, you can now keep track of coins by adding how many coins you bought or sold and at what prices. The average price for the total amount of coins in each catagory is then calculated and displayed. I have also added CryptoCompare to try and get the market price of the coin, and calculate your full adjusted percent return.</p><p>Each time you press the save button, your current portfilio data will be encrypted and saved only on your machine. The encryption will be done with whatever password is typed in at the top, so you can change it every time you save.</p><p>To load it, use the same password that was in the "password" bar at the time of clicking the save button. This is because no passwords are stored anywhere, on your machine or another. The "Load Portfolio" button does not encrypt or save anything, it only checks for a locally stored portfolio and decrypts it with the entered password, then loads it. The save button encrypts and saves everything added into the portfolio up to that point with the password currently in the password input. An empty portfolio object is initialized upon page open, and clicking save will always prompt you to confirm. Still lightweight and experimental so CryptoCompare may fail, and calculations are still in trial.</p><p><a href="https://github.com/TheGuyStyles/NoBSPlus" target="_blank">Github link</a></p><h5>This is still a work in progress, so simple bugs may come up. It is also not future proof in the case that the table conventions for the metrics change.</h5><h5>This started as a simple personal convenience project by Guy Styles, but is now mostly maintained by me, Loshcat. If I can confirm that the sheet will continue to be displayed in ways that the extension can reliably hook into it, then I will continue to improve it and add things I find useful. Hope you enjoy!</h5></div>  </div></div>');
+	ccButton.setAttribute('type', 'button');
+	ccButton.value = 'CC Price Compare';
+	ccButton.classList.add('nobs-menu-btns');
+	ccButton.onclick = function() {
+			allThePrices(0);
+			this.disabled = true;
+		};
+	dTitleRef.appendChild(ccButton);
+	
+	document.body.insertAdjacentHTML('beforeend', '<!-- The Modal --><div id="myModal" class="modal">  <!-- Modal content -->  <div class="modal-content">  <span class="modal-close"id="modal-cls">&times;</span><div id="modal-menu"><center><h1>NoBSPlus</h1></center><h2>RGBA Color Slider for the Row Highlighter:</h2><h4>Whatever color you chose is automatically saved *only* if the "X" is clicked to close this menu.</h4> <div><div class="in-bl-divs"><fieldset><label for="r-hi">R</label><input type="range"min="0"max="255"id="r-hi"step="1"value="0"><output for="r-hi"id="r-hi_out">0</output></fieldset><fieldset><label for="g-hi">G</label><input type="range"min="0"max="255"id="g-hi"step="1"value="132"><output for="g-hi"id="g-hi_out">0</output></fieldset><fieldset><label for="b-hi">B</label><input type="range"min="0"max="255"id="b-hi"step="1"value="255"><output for="b-hi"id="b-hi_out">0</output></fieldset><fieldset><label for="a-hi">A</label><input type="range"min="0"max="1"id="a-hi"step=".01"value="0.3"><output for="a-hi"id="a-hi_out">1</output></fieldset></div> <div id="color-pre-box"></div></div> <h2>Basic Use:</h2><p>To use, simply hover over each row to highlight it in the color you have chosen. To keep a row highlighted, click on any cell within the row except for the first one which contains the name of the coin. Clicking on the coin name will open a small area beneath its row to display each individual metric number that selected that coin, as well as the current market price of the coin and any portfolio information if you\'ve entered any. The highlighter works with each detail tab. To save your highlighter color in local storage, which persists even if you close the browser, click the "X" at the top right of the menu modal to close it. Otherwise, you can also close the menu by clicking outside of it.</p><p>There is also a Metric search functionality now, which is in the top right corner. To use it, type in a metric number such as 1 or 20 and click the search button. The search can compound for several metrics. To return back to the full spreadsheet, just click the clear button</p><h3>Note on the CC Price Compare Button:</h3><p>This was made very quickly and is very experimental. You have to wait a long time after you click before prices begin to show up, and there may be glitches or wrong information so do not rely on it. It uses the CryptoCompare API and was done to test the waters, but it may become obsolete and useless as well. Still, cool to see disparities when it works.</p><h2>Metric Tab Selector:</h2><p>Select from which detail tab you want metrics to display under the coin name after clicking on it. First tab is "0", then goes by two\'s, 0, 2, 4, etc.:</p><br><input value="0" id="met-select" /><input id="met-reset" type="button" value="Set" /><h2>Portfolio:</h2><p>When you open an info row by clicking on a coin name, you can now keep track of coins by adding how many coins you bought or sold and at what prices. The average price for the total amount of coins in each catagory is then calculated and displayed. I have also added CryptoCompare to try and get the market price of the coin, and calculate your full adjusted percent return.</p><p>Each time you press the save button, your current portfilio data will be encrypted and saved only on your machine. The encryption will be done with whatever password is typed in at the top, so you can change it every time you save.</p><p>To load it, use the same password that was in the "password" bar at the time of clicking the save button. This is because no passwords are stored anywhere, on your machine or another. The "Load Portfolio" button does not encrypt or save anything, it only checks for a locally stored portfolio and decrypts it with the entered password, then loads it. The save button encrypts and saves everything added into the portfolio up to that point with the password currently in the password input. An empty portfolio object is initialized upon page open, and clicking save will always prompt you to confirm. Still lightweight and experimental so CryptoCompare may fail, and calculations are still in trial.</p><p><a href="https://github.com/TheGuyStyles/NoBSPlus" target="_blank">Github link</a></p><h5>This is still a work in progress, so simple bugs may come up. It is also not future proof in the case that the table conventions for the metrics change.</h5><h5>This started as a simple personal convenience project by Guy Styles, but is now mostly maintained by me, Loshcat. If I can confirm that the sheet will continue to be displayed in ways that the extension can reliably hook into it, then I will continue to improve it and add things I find useful. Hope you enjoy!</h5></div>  </div></div>');
 	
 	document.getElementById('met-reset').onclick = function() {reloadMetrics();}
 
@@ -255,7 +347,7 @@ function nobsSetup(tblHook) {
 			if (eachChildElem[j].classList.contains('first-td')) {
 				eachChildElem[j].onclick = function() {
 					var infoRow = this.parentNode.parentNode.childNodes[this.parentNode.rowIndex] || {},
-						thisCoin = this.innerHTML;
+						thisCoin = this.innerText;
 					
 					if (infoRow.classList && infoRow.classList.contains('own-info')) {
 						//infoRow.style.display = infoRow.style.display === 'none' ? '' : 'none';
@@ -328,7 +420,7 @@ function nobsSetup(tblHook) {
 								metCellRef = metRowRef.insertCell();
 								metCellRef.style.backgroundColor = metricsColor;
 								if (typeof metricPicks[j] === 'number') {
-									metCellRef.innerHTML = metricPicks[j];
+									metCellRef.innerText = metricPicks[j];
 								}
 								if (j + 1 == metricPicks.length) {
 									break;
@@ -425,10 +517,12 @@ function getCryptoCompare(cellRef, coinName, newName) {
 	var req = new XMLHttpRequest();
 	req.open('GET', myURL, true);
 	req.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200 && realName.indexOf('*') == -1) {
+		if (this.readyState == 4 && this.status == 200) {
 			var coinData = JSON.parse(this.response);
 			if (coinData.Response == 'Error') {
-				getCryptoCompare(cellRef, coinName, matches[1] + '*');
+				if (realName.indexOf('**') == -1) {
+					getCryptoCompare(cellRef, coinName, realName + '*');
+				}
 			} else {
 				readPort(cellRef, coinName, coinData.BTC);
 			}
