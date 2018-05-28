@@ -2,8 +2,9 @@
 A browser extension for the NoBS crypto spreadsheet.
 
 * Row Highlighter for hover and click with customizable rgba color, and the ability to save a favorite color.
-* Encrypted and local storage saved portfolio opened by clicking on coin names.
+* Encrypted and local-storage saved portfolio, opened by clicking on coin names.
 * CryptoCompare support to display current market prices.
+* CryptoCompare supplemental percent-return data now available, but experimental.
 * Search by metrics to display coins selected by a single or multiple specific metrics.
 * Further information can be accessed from the NoBSPlus Menu on the top right of the NoBS Crypto Spreadsheet.
 
