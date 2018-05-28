@@ -67,23 +67,21 @@ function allTheHistory(index) {
 					}
 					returnPercent = (Number(((ccObjArr[index].price / priceRef) * 100) - 100)).toFixed(2);
 					ccObjArr[index].cell.innerText += '\n' + returnPercent + '%';
-					setTimeout(function () {
-						allTheHistory(index + 1);
-					}, 70);
+					allTheHistory(index + 1);
 				}
 			}
 			req.send();
 		} catch (err) {
 			console.log(err);
 		}
+	} else {
+		document.getElementById('ccbtn').value = 'Done';
 	}
 }
 
 function handleCCB(coinNum) {
 	if (coinNum < tableHooks[0].rows.length - 2) {
-		setTimeout(function () {
-			allThePrices(coinNum + 1);
-		}, 70);
+		allThePrices(coinNum + 1);
 	} else {
 		allTheHistory(0);
 	}
@@ -145,36 +143,38 @@ function initMenuModal() {
 		ccButton = document.createElement('input');
 
 	menuBtnRef.setAttribute('type', 'button');
-	menuBtnRef.value = 'NoBSPlus Menu';
 	menuBtnRef.id = 'exmenu-btn';
+	menuBtnRef.value = 'NoBSPlus Menu';
 	menuBtnRef.classList.add('nobs-menu-btns');
 	dTitleRef.appendChild(menuBtnRef);
 	
 	clearMetBtn.setAttribute('type', 'button');
-	clearMetBtn.value = 'Clear';
 	clearMetBtn.id = 'met-clear';
+	clearMetBtn.value = 'Clear';
 	clearMetBtn.classList.add('nobs-menu-btns');
 	clearMetBtn.onclick = function() {clearMetricPk();}
 	dTitleRef.appendChild(clearMetBtn);
 	
-	srchMetInput.placeholder = 'Metric #';
 	srchMetInput.id = 'met-kul';
+	srchMetInput.placeholder = 'Metric #';
 	srchMetInput.classList.add('nobs-menu-btns');
 	dTitleRef.appendChild(srchMetInput);
 	
 	srchMetBtn.setAttribute('type', 'button');
-	srchMetBtn.value = 'Search';
 	srchMetBtn.id = 'met-kulset';
+	srchMetBtn.value = 'Search';
 	srchMetBtn.classList.add('nobs-menu-btns');
 	srchMetBtn.onclick = function() {searchMetricPk();}
 	dTitleRef.appendChild(srchMetBtn);
 	
 	ccButton.setAttribute('type', 'button');
+	ccButton.id = 'ccbtn';
 	ccButton.value = 'CC Price Compare';
 	ccButton.classList.add('nobs-menu-btns');
 	ccButton.onclick = function() {
-			allThePrices(0);
 			this.disabled = true;
+			allThePrices(0);
+			this.value = 'Loading...';
 		};
 	dTitleRef.appendChild(ccButton);
 	
@@ -293,7 +293,9 @@ if (localStorage.getItem('nobs_hi_color') !== null) {
 	a_hi_out.value = storedColor[3];
 }
 
-var colorToAdd = [Number(r_hi.value), Number(g_hi.value), Number(b_hi.value), Number(a_hi.value)];
+var colorToAdd = [Number(r_hi.value), Number(g_hi.value), Number(b_hi.value), Number(a_hi.value)],
+	colorToClick = colorToAdd.slice();
+colorToClick[3] += 0.2;
 // --
 
 function setHiColor(outHi, inHi) {
@@ -301,6 +303,8 @@ function setHiColor(outHi, inHi) {
 	var formatedColor = "rgba("+colorToAdd.join(', ')+")";
 	outHi.value = inHi.value;
 	colorToAdd = [Number(r_hi.value), Number(g_hi.value), Number(b_hi.value), Number(a_hi.value)];
+	colorToClick = colorToAdd.slice();
+	colorToClick[3] += 0.2;
 	document.getElementById('color-pre-box').style.backgroundColor = formatedColor;
 }
 setHiColor(r_hi_out, r_hi);
@@ -329,7 +333,7 @@ function nobsSetup(tblHook) {
 					var rowCells = this.parentElement.childNodes;
 
 					for (var k = 0; k < rowCells.length; ++k) {
-						rowCells[k].style.backgroundColor = addColors(getRGBValues(getComputedStyle(rowCells[k]).backgroundColor), 0);
+						rowCells[k].style.backgroundColor = addColors(getRGBValues(getComputedStyle(rowCells[k]).backgroundColor), false);
 					}
 				}
 			};
@@ -452,7 +456,7 @@ function nobsSetup(tblHook) {
 						for (var k = 0; k < rowCells.length; ++k) {
 							rowCells[k].classList.add('just-selected');
 							rowCells[k].style.backgroundColor = '';
-							rowCells[k].style.backgroundColor = addColors(getRGBValues(getComputedStyle(rowCells[k]).backgroundColor), 0.2);
+							rowCells[k].style.backgroundColor = addColors(getRGBValues(getComputedStyle(rowCells[k]).backgroundColor), true);
 						}
 					} else {
 						var rowCells = this.parentElement.childNodes;
@@ -562,13 +566,12 @@ function getRGBValues(rgbStr) {
 		vals[1],
 		vals[2],
 		vals[3] ? vals[3] : '1'
-	]
+	];
 }
 
 function addColors(base, alphaPlus) {
-	var added = colorToAdd.slice(),
+	var added = alphaPlus ? colorToClick : colorToAdd,
 		mix = [];
-	added[3] += alphaPlus;
 	
 	mix[3] = 1 - (1 - added[3]) * (1 - base[3]); // alpha
 	mix[0] = Math.round((added[0] * added[3] / mix[3]) + (base[0] * base[3] * (1 - added[3]) / mix[3])); // red
